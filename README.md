@@ -65,6 +65,36 @@ cp -R work-selfie ~/.claude/skills/work-selfie
 
 Agent 会先告诉你它准备读取什么数据，等你确认后再开始。默认产物会先落到本地，不会自动发出去。
 
+## 公司用钉钉还是飞书？
+
+WorkSelfie 的底层不是绑死某一个办公软件，而是通过 CLI provider 读取你授权的工作痕迹：
+
+- 公司用钉钉：走 `dws`。
+- 公司用飞书 / Lark：预留 `lark-cli` 入口。
+
+配置好 skill 后，你可以先让 agent 帮你检查并引导配置对应 CLI：
+
+```bash
+python3 scripts/bootstrap_cli.py --provider auto --dry-run
+```
+
+确认计划没问题后，让 agent 跑一键自检：
+
+```bash
+python3 scripts/bootstrap_cli.py --provider auto
+```
+
+如果 CLI 不存在，它会明确告诉 agent 需要先安装 `dws` 还是 `lark-cli`，或通过 `WORKSELFIE_DWS_BIN` / `WORKSELFIE_LARK_BIN` 指向已有二进制。
+
+如果你明确知道公司用哪个：
+
+```bash
+python3 scripts/bootstrap_cli.py --provider dws --dry-run
+python3 scripts/bootstrap_cli.py --provider lark --dry-run
+```
+
+`dws` 是当前已接通的采集路径；`lark-cli` 已预留 provider、鉴权和数据源映射入口，适合后续扩展到飞书团队。
+
 ## 如果你只想看 Demo
 
 不用接任何真实数据，也可以重新生成 README 里的四张虚构示例卡：
@@ -91,4 +121,3 @@ examples/cards/demo-grid.png
 ## 一句话介绍
 
 **WorkSelfie turns your work traces into a shareable workplace selfie card and self-analysis report.**
-

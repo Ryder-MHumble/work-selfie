@@ -65,6 +65,36 @@ Use WorkSelfie to take a selfie of how I work.
 
 The agent should first explain what data it wants to read, wait for your confirmation, and save the result locally by default.
 
+## DingTalk or Lark?
+
+WorkSelfie is not meant to be locked to one office suite. It reads approved work traces through a CLI provider:
+
+- DingTalk teams use `dws`.
+- Lark / Feishu teams use the reserved `lark-cli` path.
+
+After installing the skill, ask your agent to check and guide the right CLI setup:
+
+```bash
+python3 scripts/bootstrap_cli.py --provider auto --dry-run
+```
+
+After reviewing the plan, let the agent run the actual readiness check:
+
+```bash
+python3 scripts/bootstrap_cli.py --provider auto
+```
+
+If the CLI is missing, the script tells the agent whether to install `dws` or `lark-cli`, or to point `WORKSELFIE_DWS_BIN` / `WORKSELFIE_LARK_BIN` to an existing binary.
+
+If you already know your workplace stack:
+
+```bash
+python3 scripts/bootstrap_cli.py --provider dws --dry-run
+python3 scripts/bootstrap_cli.py --provider lark --dry-run
+```
+
+The `dws` collector is wired today. The `lark-cli` provider, auth flow, and data-source mapping entrypoint are reserved for Lark-based workplaces.
+
 ## Just Want The Demo?
 
 You can regenerate the fictional demo cards without connecting real work data:
@@ -91,4 +121,3 @@ examples/cards/demo-grid.png
 ## One-Line Pitch
 
 **WorkSelfie turns your work traces into a shareable workplace selfie card and self-analysis report.**
-

@@ -24,8 +24,13 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
-# Prefer PATH for portability; SELF_DISTILL_DWS_BIN can point to a custom dws binary.
-DWS_BIN = os.environ.get("SELF_DISTILL_DWS_BIN") or shutil.which("dws") or "dws"
+# Prefer PATH for portability; WORKSELFIE_DWS_BIN can point to a custom dws binary.
+DWS_BIN = (
+    os.environ.get("WORKSELFIE_DWS_BIN")
+    or os.environ.get("SELF_DISTILL_DWS_BIN")
+    or shutil.which("dws")
+    or "dws"
+)
 
 CST = timezone(timedelta(hours=8))
 
@@ -333,6 +338,7 @@ def collect_aitables() -> List[AitableItem]:
 # ---------- 顶层入口 ----------
 
 def collect_all(
+    provider: str = "dws",
     user_id: Optional[str] = None,
     user_name: Optional[str] = None,
     start_iso: Optional[str] = None,
@@ -347,6 +353,13 @@ def collect_all(
 
     任何数据源失败不阻塞，只在 result.errors 留痕。
     """
+    if provider not in ("dws", "auto"):
+        raise NotImplementedError(
+            f"{provider} provider is reserved for the next connector. "
+            "Run `python3 scripts/bootstrap_cli.py --provider lark --dry-run` "
+            "to prepare lark-cli setup/auth first."
+        )
+
     if not user_id or not user_name:
         info = get_self()
         if not info:
@@ -434,6 +447,8 @@ if __name__ == "__main__":
     parser.add_argument("--skip-minutes", action="store_true")
     parser.add_argument("--skip-docs", action="store_true")
     parser.add_argument("--skip-aitables", action="store_true")
+    parser.add_argument("--provider", default="dws", choices=["dws", "lark", "auto"],
+                        help="办公软件 CLI provider（当前 dws 实采，lark 入口预留）")
     parser.add_argument("--json-summary", action="store_true",
                         help="输出 snapshot 摘要（不含 raw_data）到 stdout")
     args = parser.parse_args()
@@ -446,6 +461,7 @@ if __name__ == "__main__":
         start_iso = start_dt.strftime("%Y-%m-%dT00:00:00+08:00")
 
     result = collect_all(
+        provider=args.provider,
         start_iso=start_iso,
         end_iso=end_iso,
         skip_chat=args.skip_chat,

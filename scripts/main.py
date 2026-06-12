@@ -154,6 +154,7 @@ def ask_confirm_send() -> bool:
 
 def run(
     days: int = 90,
+    provider: str = "dws",
     skip_consent: bool = False,
     no_card: bool = False,
     dry_run: bool = False,
@@ -166,7 +167,7 @@ def run(
     返回：{status, user_id, message_count, sent_text, sent_card, ...}
     """
     t_start = time.time()
-    print("\n🚀 self-distill 启动\n", file=sys.stderr)
+    print(f"\n🚀 WorkSelfie 启动（provider={provider}）\n", file=sys.stderr)
 
     # ===== Step 1: 读 snapshot =====
     old_snapshot = load_snapshot()
@@ -194,7 +195,7 @@ def run(
         start_iso = window["start"]
         end_iso = window["end"]
 
-    collection = collect_all(start_iso=start_iso, end_iso=end_iso)
+    collection = collect_all(provider=provider, start_iso=start_iso, end_iso=end_iso)
     user_id = collection.user_id
     user_name = collection.user_name
 
@@ -399,6 +400,8 @@ def run(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="self-distill 主流程")
     parser.add_argument("--days", type=int, default=90, help="时间窗口天数（默认 90 = 接近全量；用 --all 真正遍历）")
+    parser.add_argument("--provider", default="dws", choices=["dws", "lark", "auto"],
+                        help="办公软件 CLI provider（当前 dws 实采，lark 入口预留）")
     parser.add_argument("--skip-consent", action="store_true", help="跳过知情同意（仅当用户已明确授权）")
     parser.add_argument("--no-card", action="store_true", help="只发文本，不出 PNG 名片")
     parser.add_argument("--dry-run", action="store_true", help="只预览不发送")
@@ -413,6 +416,7 @@ if __name__ == "__main__":
 
     result = run(
         days=args.days,
+        provider=args.provider,
         skip_consent=args.skip_consent,
         no_card=args.no_card,
         dry_run=args.dry_run,

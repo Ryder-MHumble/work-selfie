@@ -25,7 +25,7 @@ class PublicPackageTest(unittest.TestCase):
         self.assertEqual([], offenders)
 
     def test_dws_binary_can_be_overridden_by_environment(self):
-        os.environ["SELF_DISTILL_DWS_BIN"] = "/tmp/example-dws"
+        os.environ["WORKSELFIE_DWS_BIN"] = "/tmp/example-dws"
         try:
             import collect_self
             import send_report
@@ -36,7 +36,7 @@ class PublicPackageTest(unittest.TestCase):
             self.assertEqual("/tmp/example-dws", collect_self.DWS_BIN)
             self.assertEqual("/tmp/example-dws", send_report.DWS_BIN)
         finally:
-            os.environ.pop("SELF_DISTILL_DWS_BIN", None)
+            os.environ.pop("WORKSELFIE_DWS_BIN", None)
 
 
 if __name__ == "__main__":

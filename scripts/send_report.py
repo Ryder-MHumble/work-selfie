@@ -20,8 +20,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from analyze import SBTI_STYLE_MAP, SBTI_CANDIDATES  # 5 章 SBTI 风格解读 + 列未入围候选
 
 
-# Prefer PATH for portability; SELF_DISTILL_DWS_BIN can point to a custom dws binary.
-DWS_BIN = os.environ.get("SELF_DISTILL_DWS_BIN") or shutil.which("dws") or "dws"
+# Prefer PATH for portability; WORKSELFIE_DWS_BIN can point to a custom dws binary.
+DWS_BIN = (
+    os.environ.get("WORKSELFIE_DWS_BIN")
+    or os.environ.get("SELF_DISTILL_DWS_BIN")
+    or shutil.which("dws")
+    or "dws"
+)
 
 
 def run_dws(args: List[str], timeout: int = 60) -> Optional[Dict[str, Any]]:

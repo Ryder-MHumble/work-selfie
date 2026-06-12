@@ -31,6 +31,7 @@ output_policy: "local-first"
 - `--skip-consent` ：跳过知情同意（仅当用户已明确授权时）
 - `--no-card` ：只发文本报告，不出 PNG 名片
 - `--text-only` ：只发文本报告和可视化，不出野兽派×二次元名片
+- `--provider {auto,dws,lark}` ：办公软件 CLI provider。`dws` 为当前实采路径；`lark` 为预留入口，先跑 `scripts/bootstrap_cli.py --provider lark --dry-run` 完成 CLI/鉴权准备。
 - `--send-to-dingtalk` ：**默认 False**。需要把报告/名片发回自己钉钉时显式开（涉及 dws pat 中风险 scope 授权）
 - `--style {1x1,4x5,9x16}` ：名片比例（**默认 4:5 = 720x900，缩尺寸 + 字号 +22% 组合**——800x1000 留白太多已被淘汰，详见 [v10-card-density-fixes.md §v11](./references/v10-card-density-fixes.md#v11-卡片缩尺寸--字号-22--3d-图与-sbti-块重叠)）
 
@@ -42,7 +43,7 @@ output_policy: "local-first"
 - **❌ 绝不允许跨用户复用**——snapshot 内置 userId，userId 不匹配时强制重新全量
 - **❌ 绝不允许跳过知情同意**（除非用户显式 `--skip-consent`）
 - **❌ 绝不允许把数据上传到云端 AI 训练集**——只走本机的 LLM 推理
-- **❌ 绝不允许冒用其他 dws 命令冒充 dws 自检能力**——所有数据采集必须走 `dws` CLI
+- **❌ 绝不允许冒用浏览器、curl 或未声明 API 冒充办公软件采集能力**——所有数据采集必须走已声明的 provider CLI（`dws` / `lark-cli`）
 - **❌ 绝不允许硬编码绝对路径引用 skill 外部资源**（如 `~/Desktop/toonhub-*.png`）——任何图片/音频/字体等资源必须放在 `skill_dir/assets/`，用 `Path(__file__).parent.parent / "assets"` 引用。否则换台机器、用户搬家、被清理桌面时，渲染会静默失败（Chrome headless 不报错，`<img src="">` 直接显示 alt 文字）
 - **❌ 绝不允许在卡片里出现「未分类选手」「????」「数据样本不够」等空 fallback 标签**——所有维度都必须给有意义的人设标签 + 一句话总结（兜底统一为「均衡型」）
 - **❌ 绝不允许省略 5 维推断的 secondary**——决策/沟通/压力/价值观/信息处理 每维都返回 primary + secondary
@@ -57,7 +58,9 @@ output_policy: "local-first"
 
 - **数据 in-memory**：所有拉到的消息/文档在 Python 进程内存中处理，处理完毕即从内存释放，**绝不调用 `json.dump` 把原始数据写到 skill 目录**
 - **知情同意先行**：每次跑（除非 `--skip-consent`）必须先展示 [references/privacy-disclosure.md](./references/privacy-disclosure.md) 的精简版，让用户看到「采什么+怎么用+怎么不存」并回复 Y
-- **dws 命令合法性协议**：所有 dws 命令执行前必须用 [dws skill](../dws/SKILL.md) 资料确认；不确定时用 `dws <path> --help` 查证
+- **provider 选择协议**：默认 `--provider auto`，但必须先用 `scripts/bootstrap_cli.py --provider auto --dry-run` 检查本机可用 CLI；用户明确公司用钉钉则 `dws`，明确用飞书/Lark 则 `lark`。
+- **dws 命令合法性协议**：所有 dws 命令执行前必须用 [dws skill](../dws/SKILL.md) 资料确认；不确定时用 `dws <path> --help` 查证。
+- **lark-cli 预留协议**：飞书/Lark 场景必须先按 [lark-shared](../lark-shared/SKILL.md) 完成 `lark-cli config init` 与 split-flow 用户授权；当前 `lark` provider 只提供 CLI/鉴权与数据源映射入口，未完成采集前不得假装已生成真实 Lark 分析。
 - **危险操作确认**：发回报告/名片前必须把"内容预览 + 发送目标（自己的 userId）"展示给用户确认
 - **失败优雅降级**：某个数据源（chat/doc/minutes/aitable）失败时，跳过该维度，标注「⚠️ 本维度数据采集失败：<原因>」，不让全流程挂
 - **跨周期增量**：从 `data/last_snapshot.json` 读 `last_run_at`，新数据的 `--start` = `last_run_at`，合并到历史摘要
@@ -79,7 +82,11 @@ output_policy: "local-first"
 ```
 [知情同意]
   ↓
-[查自己 userId]  →  dws contact user get-self
+[选择 provider] → auto / dws / lark
+  ├─ dws: scripts/bootstrap_cli.py --provider dws --dry-run
+  └─ lark: scripts/bootstrap_cli.py --provider lark --dry-run（预留入口，按 lark-shared 走 split-flow 授权）
+  ↓
+[查自己 userId]  →  dws contact user get-self（lark 后续映射为 lark-cli user 身份）
   ↓
 [读 last_snapshot.json]（决定增量起点）
   ↓
@@ -195,6 +202,8 @@ dws pat chmod doc:create --grant-type permanent --agentCode self-distill --yes
 本 skill 不直接调 dws 命令——通过以下脚本间接调：
 
 - `scripts/main.py` — 端到端编排（知情同意 → 采集 → 分析 → diff → 报告 → 渲染 → 本地输出 / dws 发送）
+- `scripts/bootstrap_cli.py` — provider CLI 自检/配置引导（`--provider auto|dws|lark`；lark 按 split-flow 输出下一步）
+- `scripts/workselfie_providers.py` — provider registry（dws 已接通，lark-cli 预留数据源与鉴权入口）
 - `scripts/collect_self.py` — 4 数据源采集：user get-self / chat message list-by-sender / minutes list mine / doc search / aitable base list
 - `scripts/analyze.py` — 表达 DNA + 行为模式 + MBTI/SBTI/动物 + 性格 6 项 + KPI 快乐版 + 职场宣言 + 摸鱼标签
 - `scripts/render_card.py` — 野兽派×二次元名片渲染（**v9 默认 4:5**，HTML+CSS+SVG+Chrome headless，flex column 等分填满）
