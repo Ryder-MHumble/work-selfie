@@ -1,0 +1,18 @@
+# Local analysis state and generated samples
+data/last_snapshot.json
+data/persona_card_sample*
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# macOS metadata
+.DS_Store
+._*
+__MACOSX/
+
+# Local backups and archives
+*.bak
+*.zip
+
