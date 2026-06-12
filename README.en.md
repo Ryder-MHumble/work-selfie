@@ -1,20 +1,25 @@
 # WorkSelfie
 
-> Not a selfie of your face. A selfie of how you work.
+> Not a selfie of your face. A selfie of who you become at work.
 
 [中文 README](README.md)
 
 ![WorkSelfie demo cards](examples/cards/demo-grid.png)
 
-You know that feeling when your work chat says more about you than any personality test?
+You work every day, but very few tools show how you actually work.
 
-Maybe you are the person who turns messy threads into action lists. Maybe you are the one who explains everything clearly. Maybe you quietly scan group chats, catch weak signals, and jump in when something is about to break.
+Maybe you are the person who:
+
+- Turns a messy group chat into a clean action list.
+- Says little in the meeting, then writes the plan, risks, and next steps afterward.
+- Replies "got it" while quietly reshuffling priorities, unblocking people, and saving the timeline.
+- Sends only a few messages, but somehow coordinates half the room.
 
 WorkSelfie lets an agent read the work traces you approve, then turns them into two things: a playful self-analysis report and a shareable 4:5 workplace selfie card.
 
-It is not a questionnaire. It is not another productivity dashboard. It feels more like a friend looking at how you work and saying:
+It is not a questionnaire. It is not another productivity dashboard. It feels more like a coworker who finally notices your hidden operating system: how you talk, when you show up, how you push things forward, how you save the day, and how you work with others.
 
-> "You are not just doing tasks. You are playing a very specific workplace character."
+> "You are not just doing tasks. You have a hidden workplace class."
 
 ## What You Get
 
@@ -77,6 +82,7 @@ examples/cards/demo-grid.png
 
 ## Who It Is For
 
+- People who wonder what role they really play at work.
 - People who want a fun, shareable snapshot of their work style.
 - Teams that want a lighter way to understand collaboration styles.
 - Agent builders who want to give their assistant a "read me back to myself" capability.
