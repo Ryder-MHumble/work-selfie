@@ -1,187 +1,90 @@
-# Self-Distill 自我蒸馏
+# Worksona
 
-把你的工作痕迹，变成一张有趣、可分享、但默认隐私安全的「自我画像卡」。
+> 工作会留下痕迹。Worksona 把这些痕迹变成你的「职场人格小人」。
 
 [English README](README.en.md)
 
-Self-Distill 是一个 Codex Skill：它通过 `dws` 读取你自己的钉钉工作信号，在本地分析表达习惯、行为模式和协作节奏，并生成两类产物：
+![Worksona demo cards](examples/cards/demo-grid.png)
 
-- 一份完整的 Markdown 自我分析报告，覆盖表达 DNA、行为模式、SBTI、MBTI、动物画像和 5 维趣味推断。
-- 一张野兽派 × 二次元风格的 4:5 Profile Card PNG，看起来更像收藏角色卡，而不是普通仪表盘。
+你有没有过这种感觉：
 
-> 下面的示例卡片全部使用虚构英文人物，不包含任何真实用户数据。
+- 群里一开会，你总是那个把混乱问题拆成清单的人。
+- 别人只看到你发了很多消息，但看不出你是在救火、推进、解释，还是侦察信息。
+- 你想给朋友看「我到底是怎么工作的」，但截图聊天记录太无聊，性格测试又太像填表。
 
-## 示例效果
+Worksona 做的事情很简单：让你的 agent 读取你授权的工作痕迹，然后生成一份有梗但有依据的自我报告，再把结果画成一张可以分享的 4:5 人格卡片。
 
-![四张虚构 Self-Distill Profile Card](examples/cards/demo-grid.png)
+它不是让你填问卷，也不是又一个 KPI 面板。它更像一个会观察你的朋友：看你怎么说话、什么时候出现、怎么推进事情、怎么和别人协作，然后说：
 
-单张示例：
+> 「你不像一个普通打工人，你像一个带任务机制的角色。」
 
-| 小人 | 示例卡片 | 触发特征 |
-|---|---|---|
-| 专注橙 | ![Avery North](examples/cards/orange-focus-architect.png) | 长文本、抽象词、工作词占比高、深度分析明显。 |
-| 元气绿 | ![Mira Vale](examples/cards/green-energy-mentor.png) | 积极语气、讲解型表达、群聊气氛带动强。 |
-| 推进粉 | ![Nova Reed](examples/cards/pink-execution-commander.png) | 白天稳定推进、目标明确、核心协作强、项目节奏感明显。 |
-| 侦察蓝 | ![Kai Signal](examples/cards/blue-scout-signal.png) | 问句多、短回复多、群聊侦察、快速响应或深夜救火。 |
+## 它会给你什么
 
-## 它能做什么
+- 一张可以发朋友圈/小红书/群聊的工作人格卡，里面有 3D 小人、SBTI 排名、表达 DNA 和五维推断。
+- 一份完整文字报告，解释你为什么像这个角色，而不是只给一个玄学标签。
+- 一套可复用的 agent skill，换一批数据、换一个人，也能跑出新的角色卡。
 
-Self-Distill 会把普通的工作元数据转成更有表达力的个人画像：
+## 小人不是随机贴上去的
 
-1. **采集**：通过 `dws` 读取你自己的钉钉工作信号。
-2. **分析**：提取表达 DNA、活跃时段、消息长度、协作形态、SBTI 风格、MBTI 维度、动物隐喻和 5 维人格信号。
-3. **报告**：生成完整 Markdown 分析报告。
-4. **出图**：用 HTML/CSS + Headless Chrome 渲染 720×900 PNG 卡片。
-5. **交付**：默认本地输出到 `~/Downloads/`；发送到钉钉需要显式开启。
+Worksona 会根据你的行为信号挑小人：
 
-## 隐私模型
+- **橙色眼镜小人**：长消息多、抽象词多、系统化表达明显，像在脑内画架构图。
+- **绿色比 V 小人**：语气积极、喜欢解释、经常把事情讲清楚，像团队里的气氛讲师。
+- **粉色举拳小人**：白天稳定推进、目标明确、协作中心感强，像项目里的执行发动机。
+- **蓝色指向小人**：短回复、问题多、响应快、喜欢侦察信息，像群聊里的信号雷达。
 
-Self-Distill 默认本地优先：
+所以卡片不是装饰，它是对你工作方式的一次视觉翻译。
 
-- 原始消息和文档正文只在内存中处理，不写入 skill 目录。
-- 持久化状态只允许写分析摘要：`data/last_snapshot.json`。
-- 报告和 PNG 默认保存到本地。
-- 发送到钉钉需要显式参数和二次确认。
-- 分发包不应包含任何个人 `data/last_snapshot.json`。
+## 怎么开始
 
-## 快速开始
-
-把文件夹安装为 Codex Skill：
+把仓库放进你正在使用的 agent 的 skills 目录即可。只要你的 agent 支持本地 `SKILL.md` / skills 文件夹，就不限定 Codex。
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R self-distill-skill ~/.codex/skills/self-distill
+git clone https://github.com/Ryder-MHumble/worksona.git
+
+# 示例：放到你自己的 agent skills 目录
+mkdir -p ~/.agents/skills
+cp -R worksona ~/.agents/skills/worksona
 ```
 
-然后重启 Codex，让 Skill 生效。
-
-本地 dry run：
+如果你用的是其他 agent，把 `~/.agents/skills` 换成它自己的 skills 目录即可，例如：
 
 ```bash
-python3 ~/.codex/skills/self-distill/scripts/main.py --days 90 --skip-consent --dry-run
+cp -R worksona ~/.codex/skills/worksona
+cp -R worksona ~/.claude/skills/worksona
 ```
 
-生成本地报告和卡片，不发送钉钉：
+然后重启 agent，对它说一句：
 
-```bash
-python3 ~/.codex/skills/self-distill/scripts/main.py --days 90 --skip-consent
+```text
+用 Worksona 看看我是谁，生成我的工作人格卡。
 ```
 
-可选：把报告文档和卡片发送回自己的钉钉：
+Agent 会先告诉你它准备读取什么数据，等你确认后再开始。默认产物会先落到本地，不会自动发出去。
+
+## 如果你只想看 Demo
+
+不用接任何真实数据，也可以重新生成 README 里的四张虚构示例卡：
 
 ```bash
-python3 ~/.codex/skills/self-distill/scripts/main.py --days 90 --skip-consent --send
-```
-
-## 自然语言触发词
-
-在 Codex 里可以直接说：
-
-- `自查`
-- `蒸馏自己`
-- `看看我自己`
-- `我是谁`
-- `我的野兽派名片`
-
-## 重新生成示例卡片
-
-README 里的示例卡片都是虚构数据。可以这样重新生成：
-
-```bash
-cd ~/.codex/skills/self-distill
+cd worksona
 python3 scripts/generate_demo_cards.py
 ```
 
-输出文件：
+生成后会看到：
 
 ```text
-examples/cards/orange-focus-architect.png
-examples/cards/green-energy-mentor.png
-examples/cards/pink-execution-commander.png
-examples/cards/blue-scout-signal.png
 examples/cards/demo-grid.png
 ```
 
-## 3D 小人选择规则
+## 适合谁玩
 
-卡片不会随机选小人，而是用用户的表达与行为信号去匹配每个小人的视觉气质：
+- 想把自己的工作风格做成一张有传播感卡片的人。
+- 想让团队成员用轻松方式互相理解协作风格的人。
+- 想给 agent 增加一个「读懂我」能力的 builder。
+- 想把沉闷的聊天记录、会议痕迹、协作数据变成有趣内容的人。
 
-| 小人 | 文件 | 信号模式 |
-|---|---|---|
-| 专注橙 | `assets/toonhub-1.png` | 长消息、抽象/系统词、工作词占比高、深度专注。 |
-| 元气绿 | `assets/toonhub-2.png` | 积极语气、解释型表达、讲解能量、温暖群聊沟通。 |
-| 推进粉 | `assets/toonhub-3.png` | 稳定白天活跃、项目 ownership、核心协作强、推进感强。 |
-| 侦察蓝 | `assets/toonhub-4.png` | 问句多、短回复多、群聊侦察、深夜快速响应。 |
+## 一句话介绍
 
-实现位置：
+**Worksona turns your work traces into a shareable character card and self-analysis report.**
 
-```text
-scripts/render_card.py
-  FIGURE_LIBRARY
-  select_figure()
-```
-
-测试位置：
-
-```text
-scripts/test_render_card_layout.py
-```
-
-## 环境要求
-
-- macOS，并安装 Google Chrome：`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
-- Python 3.10+
-- 已配置可用的 `dws` CLI，用于钉钉数据采集
-- 仅生成 Demo 卡片时，不需要钉钉权限
-
-## 项目结构
-
-```text
-self-distill/
-├── SKILL.md
-├── README.md
-├── README.en.md
-├── assets/
-│   ├── toonhub-1.png
-│   ├── toonhub-2.png
-│   ├── toonhub-3.png
-│   └── toonhub-4.png
-├── examples/
-│   └── cards/
-├── references/
-│   ├── persona-library-spec.md
-│   ├── card-style-guide.md
-│   └── ...
-└── scripts/
-    ├── main.py
-    ├── analyze.py
-    ├── render_card.py
-    ├── generate_demo_cards.py
-    └── test_render_card_layout.py
-```
-
-## 验证方式
-
-运行布局与渲染测试：
-
-```bash
-cd ~/.codex/skills/self-distill/scripts
-python3 -m unittest test_render_card_layout.py -v
-python3 -m py_compile render_card.py
-```
-
-预期结果：
-
-```text
-Ran 10 tests
-OK
-```
-
-## 设计定位
-
-Self-Distill 不是严肃人格测试，也不是企业 KPI 仪表盘。它更像一面「工作风格镜子」：
-
-- 足够数据化，所以有依据。
-- 足够视觉化，所以能传播。
-- 足够怪，所以有记忆点。
-- 默认本地优先，所以更安全。

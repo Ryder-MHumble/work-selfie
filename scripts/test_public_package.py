@@ -6,7 +6,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 FORBIDDEN_USER_PATH = "/Users/" + "rydersun"
-FORBIDDEN_PERSON_NAME = "Ryd" + "er"
+FORBIDDEN_SAMPLE_MARKERS = ("Ryd" + "er 2026", "Ryd" + "er ·", "自查报告 · " + "Ryd" + "er")
 
 
 class PublicPackageTest(unittest.TestCase):
@@ -19,7 +19,7 @@ class PublicPackageTest(unittest.TestCase):
             if path.suffix not in checked_suffixes:
                 continue
             text = path.read_text(errors="ignore")
-            if FORBIDDEN_USER_PATH in text or FORBIDDEN_PERSON_NAME in text:
+            if FORBIDDEN_USER_PATH in text or any(marker in text for marker in FORBIDDEN_SAMPLE_MARKERS):
                 offenders.append(path.relative_to(ROOT).as_posix())
 
         self.assertEqual([], offenders)

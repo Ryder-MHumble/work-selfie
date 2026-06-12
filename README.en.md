@@ -1,187 +1,88 @@
-# Self-Distill
+# Worksona
+
+> Work leaves traces. Worksona turns them into your workplace character.
 
 [中文 README](README.md)
 
-Turn your work traces into a playful, privacy-first self-portrait.
+![Worksona demo cards](examples/cards/demo-grid.png)
 
-Self-Distill is a Codex skill that reads your own DingTalk workspace signals through `dws`, analyzes expression and collaboration patterns locally, and generates two outputs:
+You know that feeling when your work chat says more about you than any personality test?
 
-- A long-form self-analysis report with behavioral, expression, SBTI, MBTI, animal, and five-dimension insights.
-- A brutalist-anime 4:5 profile card PNG that feels more like a collectible character card than a dashboard.
+Maybe you are the person who turns messy threads into action lists. Maybe you are the one who explains everything clearly. Maybe you quietly scan group chats, catch weak signals, and jump in when something is about to break.
 
-> Demo cards use fictional English profiles only. They do not contain real user data.
+Worksona lets an agent read the work traces you approve, then turns them into two things: a playful self-analysis report and a shareable 4:5 character card.
 
-## Example Output
+It is not a questionnaire. It is not another productivity dashboard. It feels more like a friend looking at how you work and saying:
 
-![Four fictional Self-Distill profile cards](examples/cards/demo-grid.png)
+> "You are not just doing tasks. You are playing a very specific workplace character."
 
-Individual examples:
+## What You Get
 
-| Figure | Demo profile | When it appears |
-|---|---|---|
-| Orange Focus | ![Avery North](examples/cards/orange-focus-architect.png) | Long-form thinking, abstract language, work-heavy vocabulary, deep analysis. |
-| Green Energy | ![Mira Vale](examples/cards/green-energy-mentor.png) | Positive tone, teaching-style explanations, high-energy group communication. |
-| Pink Execution | ![Nova Reed](examples/cards/pink-execution-commander.png) | Daytime execution, clear ownership, core collaboration, project momentum. |
-| Blue Scout | ![Kai Signal](examples/cards/blue-scout-signal.png) | Short-loop questions, group-channel scouting, fast response, late incident triage. |
+- A shareable workplace character card with a 3D figure, SBTI ranking, expression DNA, and five-dimension personality signals.
+- A full written report explaining why the card looks this way, instead of dropping a random label on you.
+- A reusable agent skill that can run again for another person, another team, or another slice of work traces.
 
-## What It Does
+## The Figure Means Something
 
-Self-Distill turns ordinary work metadata into an expressive profile:
+Worksona does not pick a random cute character. It matches visible behavior signals to the figure:
 
-1. **Collect** your own DingTalk signals through `dws`.
-2. **Analyze** expression DNA, active hours, message length, collaboration shape, SBTI style, MBTI dimensions, animal metaphors, and five personality dimensions.
-3. **Write** a complete Markdown report.
-4. **Render** a 720×900 PNG profile card using HTML/CSS and headless Chrome.
-5. **Deliver locally first** to `~/Downloads/`; DingTalk sending is opt-in.
+- **Orange Focus**: long messages, abstract language, system thinking, deep work energy.
+- **Green Energy**: positive tone, teaching-style explanations, warm group communication.
+- **Pink Execution**: steady daytime momentum, clear ownership, strong collaboration center.
+- **Blue Scout**: short replies, many questions, fast response, group-channel signal scanning.
 
-## Privacy Model
+The card is not decoration. It is your work style translated into a visual character.
 
-Self-Distill is intentionally local-first:
+## How To Use It
 
-- Raw messages and document text stay in memory and are not written to disk.
-- Persistent state is limited to summary data in `data/last_snapshot.json`.
-- Reports and PNGs are saved locally by default.
-- Sending to DingTalk requires explicit flags and confirmation.
-- The distributable package should not include personal `data/last_snapshot.json`.
-
-## Quick Start
-
-Install the folder as a Codex skill:
+Put this repository into the skills folder of the agent you use. It is not limited to Codex; any agent that supports local `SKILL.md` / skills folders can use the same pattern.
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R self-distill-skill ~/.codex/skills/self-distill
+git clone https://github.com/Ryder-MHumble/worksona.git
+
+# Example: copy it into your agent skills folder
+mkdir -p ~/.agents/skills
+cp -R worksona ~/.agents/skills/worksona
 ```
 
-Restart Codex so the skill is discovered.
-
-Run a local dry run:
+If your agent uses another skills directory, replace `~/.agents/skills` with that path. For example:
 
 ```bash
-python3 ~/.codex/skills/self-distill/scripts/main.py --days 90 --skip-consent --dry-run
+cp -R worksona ~/.codex/skills/worksona
+cp -R worksona ~/.claude/skills/worksona
 ```
 
-Generate a local report and card without sending to DingTalk:
+Restart your agent and say:
 
-```bash
-python3 ~/.codex/skills/self-distill/scripts/main.py --days 90 --skip-consent
+```text
+Use Worksona to tell me who I am at work and generate my character card.
 ```
 
-Optional: send the report document and card back to yourself in DingTalk:
+The agent should first explain what data it wants to read, wait for your confirmation, and save the result locally by default.
+
+## Just Want The Demo?
+
+You can regenerate the fictional demo cards without connecting real work data:
 
 ```bash
-python3 ~/.codex/skills/self-distill/scripts/main.py --days 90 --skip-consent --send
-```
-
-## Natural Language Triggers
-
-Inside Codex, you can ask:
-
-- `自查`
-- `蒸馏自己`
-- `看看我自己`
-- `我是谁`
-- `我的野兽派名片`
-
-## Generate the Demo Cards
-
-The demo cards in this README are fictional. Regenerate them with:
-
-```bash
-cd ~/.codex/skills/self-distill
+cd worksona
 python3 scripts/generate_demo_cards.py
 ```
 
-Outputs:
+The grid image will be generated at:
 
 ```text
-examples/cards/orange-focus-architect.png
-examples/cards/green-energy-mentor.png
-examples/cards/pink-execution-commander.png
-examples/cards/blue-scout-signal.png
 examples/cards/demo-grid.png
 ```
 
-## 3D Figure Selection
+## Who It Is For
 
-The card does not randomly pick a character. It scores the user's expression and behavior signals against the visual personality of each figure:
+- People who want a fun, shareable snapshot of their work style.
+- Teams that want a lighter way to understand collaboration styles.
+- Agent builders who want to give their assistant a "read me back to myself" capability.
+- Anyone who wants boring work traces to become something memorable.
 
-| Figure | File | Signal pattern |
-|---|---|---|
-| Orange Focus | `assets/toonhub-1.png` | Long messages, abstract/system vocabulary, high work-word ratio, deep focus. |
-| Green Energy | `assets/toonhub-2.png` | Positive tone, explanatory writing, teaching energy, warm group communication. |
-| Pink Execution | `assets/toonhub-3.png` | Stable daytime activity, project ownership, strong core collaboration, launch momentum. |
-| Blue Scout | `assets/toonhub-4.png` | Many questions, short replies, group-channel scouting, late rapid-response behavior. |
+## One-Line Pitch
 
-Implementation lives in:
+**Worksona turns your work traces into a shareable character card and self-analysis report.**
 
-```text
-scripts/render_card.py
-  FIGURE_LIBRARY
-  select_figure()
-```
-
-Tests live in:
-
-```text
-scripts/test_render_card_layout.py
-```
-
-## Requirements
-
-- macOS with Google Chrome installed at `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
-- Python 3.10+
-- `dws` CLI configured for DingTalk collection
-- For demo generation only: no DingTalk access is required
-
-## Project Layout
-
-```text
-self-distill/
-├── SKILL.md
-├── README.md
-├── README.en.md
-├── assets/
-│   ├── toonhub-1.png
-│   ├── toonhub-2.png
-│   ├── toonhub-3.png
-│   └── toonhub-4.png
-├── examples/
-│   └── cards/
-├── references/
-│   ├── persona-library-spec.md
-│   ├── card-style-guide.md
-│   └── ...
-└── scripts/
-    ├── main.py
-    ├── analyze.py
-    ├── render_card.py
-    ├── generate_demo_cards.py
-    └── test_render_card_layout.py
-```
-
-## Validation
-
-Run the renderer and layout tests:
-
-```bash
-cd ~/.codex/skills/self-distill/scripts
-python3 -m unittest test_render_card_layout.py -v
-python3 -m py_compile render_card.py
-```
-
-Expected result:
-
-```text
-Ran 10 tests
-OK
-```
-
-## Design Positioning
-
-Self-Distill is not a personality test and not a corporate KPI dashboard. It is closer to a **work-style mirror**:
-
-- Data-driven enough to feel grounded.
-- Visual enough to be shareable.
-- Weird enough to be memorable.
-- Private enough to be safe by default.
