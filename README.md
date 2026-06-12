@@ -1,10 +1,10 @@
-# Worksona
+# WorkSelfie
 
-> 工作会留下痕迹。Worksona 把这些痕迹变成你的「职场人格小人」。
+> 不是自拍你的脸，是自拍你的工作方式。
 
 [English README](README.en.md)
 
-![Worksona demo cards](examples/cards/demo-grid.png)
+![WorkSelfie demo cards](examples/cards/demo-grid.png)
 
 你有没有过这种感觉：
 
@@ -12,7 +12,7 @@
 - 别人只看到你发了很多消息，但看不出你是在救火、推进、解释，还是侦察信息。
 - 你想给朋友看「我到底是怎么工作的」，但截图聊天记录太无聊，性格测试又太像填表。
 
-Worksona 做的事情很简单：让你的 agent 读取你授权的工作痕迹，然后生成一份有梗但有依据的自我报告，再把结果画成一张可以分享的 4:5 人格卡片。
+WorkSelfie 做的事情很简单：让你的 agent 读取你授权的工作痕迹，然后生成一份有梗但有依据的自我报告，再把结果画成一张可以分享的 4:5 职场自拍卡。
 
 它不是让你填问卷，也不是又一个 KPI 面板。它更像一个会观察你的朋友：看你怎么说话、什么时候出现、怎么推进事情、怎么和别人协作，然后说：
 
@@ -20,13 +20,13 @@ Worksona 做的事情很简单：让你的 agent 读取你授权的工作痕迹�
 
 ## 它会给你什么
 
-- 一张可以发朋友圈/小红书/群聊的工作人格卡，里面有 3D 小人、SBTI 排名、表达 DNA 和五维推断。
+- 一张可以发朋友圈/小红书/群聊的职场自拍卡，里面有 3D 小人、SBTI 排名、表达 DNA 和五维推断。
 - 一份完整文字报告，解释你为什么像这个角色，而不是只给一个玄学标签。
-- 一套可复用的 agent skill，换一批数据、换一个人，也能跑出新的角色卡。
+- 一套可复用的 agent skill，换一批数据、换一个人，也能跑出新的工作自拍。
 
 ## 小人不是随机贴上去的
 
-Worksona 会根据你的行为信号挑小人：
+WorkSelfie 会根据你的行为信号挑小人：
 
 - **橙色眼镜小人**：长消息多、抽象词多、系统化表达明显，像在脑内画架构图。
 - **绿色比 V 小人**：语气积极、喜欢解释、经常把事情讲清楚，像团队里的气氛讲师。
@@ -40,24 +40,24 @@ Worksona 会根据你的行为信号挑小人：
 把仓库放进你正在使用的 agent 的 skills 目录即可。只要你的 agent 支持本地 `SKILL.md` / skills 文件夹，就不限定 Codex。
 
 ```bash
-git clone https://github.com/Ryder-MHumble/worksona.git
+git clone https://github.com/Ryder-MHumble/work-selfie.git
 
 # 示例：放到你自己的 agent skills 目录
 mkdir -p ~/.agents/skills
-cp -R worksona ~/.agents/skills/worksona
+cp -R work-selfie ~/.agents/skills/work-selfie
 ```
 
 如果你用的是其他 agent，把 `~/.agents/skills` 换成它自己的 skills 目录即可，例如：
 
 ```bash
-cp -R worksona ~/.codex/skills/worksona
-cp -R worksona ~/.claude/skills/worksona
+cp -R work-selfie ~/.codex/skills/work-selfie
+cp -R work-selfie ~/.claude/skills/work-selfie
 ```
 
 然后重启 agent，对它说一句：
 
 ```text
-用 Worksona 看看我是谁，生成我的工作人格卡。
+用 WorkSelfie 给我的工作方式拍张自拍。
 ```
 
 Agent 会先告诉你它准备读取什么数据，等你确认后再开始。默认产物会先落到本地，不会自动发出去。
@@ -67,7 +67,7 @@ Agent 会先告诉你它准备读取什么数据，等你确认后再开始。�
 不用接任何真实数据，也可以重新生成 README 里的四张虚构示例卡：
 
 ```bash
-cd worksona
+cd work-selfie
 python3 scripts/generate_demo_cards.py
 ```
 
@@ -86,5 +86,5 @@ examples/cards/demo-grid.png
 
 ## 一句话介绍
 
-**Worksona turns your work traces into a shareable character card and self-analysis report.**
+**WorkSelfie turns your work traces into a shareable workplace selfie card and self-analysis report.**
 
