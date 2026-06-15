@@ -65,6 +65,31 @@ Use WorkSelfie to take a selfie of how I work.
 
 The agent should first explain what data it wants to read, wait for your confirmation, and save the result locally by default.
 
+## Too Many Chats To Trust One Pull?
+
+Real work is not always a neat 30-day sample. It can be thousands of messages across fires, follow-ups, quiet planning, and "let me check" moments. If an agent tries to read everything in one shot, the context can get truncated and the report only sees the tip of the iceberg.
+
+Use monthly export mode:
+
+```bash
+python3 scripts/main.py --provider dws --monthly-export --days 365 --dry-run
+```
+
+In this command, `--dry-run` only skips sending and final snapshot updates; the monthly export files are still written locally.
+
+WorkSelfie will page through chat records month by month and write local files like:
+
+```text
+~/Downloads/work-selfie/monthly-chat/
+├── 2026-01/messages.jsonl
+├── 2026-01/monthly-analysis.md
+├── 2026-02/messages.jsonl
+├── 2026-02/monthly-analysis.md
+└── manifest.json
+```
+
+Each `monthly-analysis.md` pulls out that month's key work, progress signals, and behavior patterns before the final WorkSelfie report combines the full timeline.
+
 ## DingTalk or Lark?
 
 WorkSelfie is not meant to be locked to one office suite. It reads approved work traces through a CLI provider:

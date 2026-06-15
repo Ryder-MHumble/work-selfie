@@ -3,7 +3,7 @@ name: work-selfie
 description: |
   WorkSelfie：从用户授权的钉钉工作痕迹（消息+文档+听记+多维表格）中提炼职场人格，输出
   「有梗但有依据的自我分析报告 + 野兽派×二次元风 4:5 职场人格卡 PNG」。
-  数据 in-memory 处理，原始消息/文档绝不留盘；只有分析结果摘要持久化以支持增量更新。
+  默认数据 in-memory 处理；只有用户明确开启月度导出时，才把原始聊天按月份保存到 skill 目录外的本地文件。
   产物**默认先本地输出**到 `~/Downloads/`（报告 .md + 名片 .png），需要时通过 `--send-to-dingtalk` 经 dws chat 机器人发回用户自己的钉钉。
   触发词：「WorkSelfie」「自查」「蒸馏自己」「看看我」「看看我自己」「我是谁」「自我画像」「我的野兽派名片」
 cli_version: ">=1.0.15"
@@ -32,6 +32,9 @@ output_policy: "local-first"
 - `--no-card` ：只发文本报告，不出 PNG 名片
 - `--text-only` ：只发文本报告和可视化，不出野兽派×二次元名片
 - `--provider {auto,dws,lark}` ：办公软件 CLI provider。`dws` 为当前实采路径；`lark` 为预留入口，先跑 `scripts/bootstrap_cli.py --provider lark --dry-run` 完成 CLI/鉴权准备。
+- `--monthly-export` ：聊天记录过多或要做全年/全量分析时启用；按月份调用 `dws chat message list-all`，每月保存 `messages.jsonl` + `monthly-analysis.md`。
+- `--monthly-output-dir PATH` ：月度导出目录，默认 `~/Downloads/work-selfie/monthly-chat`，**禁止指向 skill 的 `data/`**。
+- `--monthly-max-pages N` / `--monthly-page-size N` ：每月翻页上限和每页数量；触达上限时把该月标记为 `possibly_truncated`。
 - `--send-to-dingtalk` ：**默认 False**。需要把报告/名片发回自己钉钉时显式开（涉及 dws pat 中风险 scope 授权）
 - `--style {1x1,4x5,9x16}` ：名片比例（**默认 4:5 = 720x900，缩尺寸 + 字号 +22% 组合**——800x1000 留白太多已被淘汰，详见 [v10-card-density-fixes.md §v11](./references/v10-card-density-fixes.md#v11-卡片缩尺寸--字号-22--3d-图与-sbti-块重叠)）
 
@@ -56,7 +59,8 @@ output_policy: "local-first"
 
 ## 严格要求 (MUST DO)
 
-- **数据 in-memory**：所有拉到的消息/文档在 Python 进程内存中处理，处理完毕即从内存释放，**绝不调用 `json.dump` 把原始数据写到 skill 目录**
+- **默认数据 in-memory**：常规模式下所有拉到的消息/文档在 Python 进程内存中处理，处理完毕即释放；**绝不调用 `json.dump` 把原始数据写到 skill 目录**
+- **月度导出例外必须显式授权**：只有用户要求「更全面 / 全年 / 全量 / 避免截断 / 按月份」或显式传 `--monthly-export` 时，才允许把原始聊天按月份保存到 `~/Downloads/work-selfie/monthly-chat` 或用户指定目录；仍然禁止写入 `data/`。
 - **知情同意先行**：每次跑（除非 `--skip-consent`）必须先展示 [references/privacy-disclosure.md](./references/privacy-disclosure.md) 的精简版，让用户看到「采什么+怎么用+怎么不存」并回复 Y
 - **provider 选择协议**：默认 `--provider auto`，但必须先用 `scripts/bootstrap_cli.py --provider auto --dry-run` 检查本机可用 CLI；用户明确公司用钉钉则 `dws`，明确用飞书/Lark 则 `lark`。
 - **dws 命令合法性协议**：所有 dws 命令执行前必须用 [dws skill](../dws/SKILL.md) 资料确认；不确定时用 `dws <path> --help` 查证。
@@ -76,6 +80,7 @@ output_policy: "local-first"
 - **3D 小人必须按图像特征选择**：橙色眼镜=专注深潜，绿色比 V=积极讲解，粉色举拳=项目推进，蓝色指向=侦察响应；选择条件必须来自 `expression_dna` + `behavior_patterns` + SBTI Top1 加成，详见 `references/persona-library-spec.md`。
 - **dense card 左侧禁用大面积纯黑块**：左侧默认 41% 宽，人物图高度 59%；SBTI 只做小信息卡，背景使用新野兽派几何方块（黄/红/绿/米色）承接，不再用 `top:25%; height:80%` 的黑色大块压住半张卡。
 - **dense card 缩尺寸 + 字号 +22% 组合**（v11 沉淀）：当 4:5 800x1000 留白太多时，**优先缩 10% 尺寸（720x900）同时 +22% 字号**（row 9px→11px、模块标题 9px→11px、footer 8px→9px）。只缩尺寸不放大字号 → 留白更显眼；只放大字号不缩尺寸 → 卡片看着笨重。两者必须同步调。详见 [v10-card-density-fixes.md §v11.1](./references/v10-card-density-fixes.md#v111-缩尺寸-10--字号-22-组合)
+- **聊天过多时必须按月份处理**：当用户要全年/全量/尽可能完整的自我画像时，优先启用 `--monthly-export`；每个月独立翻页到 `hasMore=false` 或 `--monthly-max-pages`，并生成该月 `monthly-analysis.md`（重点工作、进展、用户行为特性）。若某月 `possibly_truncated=true`，必须提示按周拆分该月重跑。
 
 ## 数据流
 
@@ -90,8 +95,9 @@ output_policy: "local-first"
   ↓
 [读 last_snapshot.json]（决定增量起点）
   ↓
-[并发拉 4 类数据 — in-memory]
-  ├─ 消息：dws chat message list-all --start --end --cursor
+[并发拉 4 类数据 — 默认 in-memory；全量聊天建议 monthly-export]
+  ├─ 消息快跑：collect_self.py in-memory
+  ├─ 消息全量：monthly_export.py → dws chat message list-all --start --end --limit --cursor（按月份）
   - 听记：dws minutes list mine --start --end （**默认全量扫描所有**）
   ├─ 文档：dws doc search --creator-uid <self.uid> --start --end
   └─ 表格：dws aitable base list + base search --creator <self.uid>
@@ -140,6 +146,12 @@ output_policy: "local-first"
 
 - `self-distill-{user}-{days}.md` — 完整深度分析报告（10 章，含 SBTI 8 候选 + 5 维推断 secondary + 表达 DNA 完整数据）
 - `self-distill-{user}-{ts}.png` — 4:5 (720x900) Profile Card PNG（左侧人物图 + 新野兽派方块 + 右侧 3 个数据模块；无协作 Top 5）
+
+**启用 `--monthly-export` 时额外本地输出**（默认 `~/Downloads/work-selfie/monthly-chat/`）：
+
+- `YYYY-MM/messages.jsonl` — 该月原始聊天记录（含原文，只保存在本地输出目录）
+- `YYYY-MM/monthly-analysis.md` — 该月核心工作信息：重点工作、进展、用户行为特性、完整性提醒
+- `manifest.json` — 月份、消息数、页数、是否可能截断、文件路径汇总
 
 **仅当 `--send` 时**（dws 机器人发给自己）：
 
@@ -201,10 +213,11 @@ dws pat chmod doc:create --grant-type permanent --agentCode self-distill --yes
 
 本 skill 不直接调 dws 命令——通过以下脚本间接调：
 
-- `scripts/main.py` — 端到端编排（知情同意 → 采集 → 分析 → diff → 报告 → 渲染 → 本地输出 / dws 发送）
+- `scripts/main.py` — 端到端编排（知情同意 → 采集/月度导出 → 分析 → diff → 报告 → 渲染 → 本地输出 / dws 发送）
 - `scripts/bootstrap_cli.py` — provider CLI 自检/配置引导（`--provider auto|dws|lark`；lark 按 split-flow 输出下一步）
 - `scripts/workselfie_providers.py` — provider registry（dws 已接通，lark-cli 预留数据源与鉴权入口）
-- `scripts/collect_self.py` — 4 数据源采集：user get-self / chat message list-by-sender / minutes list mine / doc search / aitable base list
+- `scripts/collect_self.py` — 4 数据源快跑采集：user get-self / chat / minutes list mine / doc search / aitable base list
+- `scripts/monthly_export.py` — 按月份调用 `dws chat message list-all`，保存 `messages.jsonl` 并生成每月 `monthly-analysis.md`
 - `scripts/analyze.py` — 表达 DNA + 行为模式 + MBTI/SBTI/动物 + 性格 6 项 + KPI 快乐版 + 职场宣言 + 摸鱼标签
 - `scripts/render_card.py` — 野兽派×二次元名片渲染（**v9 默认 4:5**，HTML+CSS+SVG+Chrome headless，flex column 等分填满）
 - `scripts/send_report.py` — dws 发送层（文本 + 图片）
@@ -241,6 +254,7 @@ dws pat chmod doc:create --grant-type permanent --agentCode self-distill --yes
 ├── scripts/
 │   ├── main.py                         # 端到端编排
 │   ├── collect_self.py                 # 4 数据源采集（in-memory）
+│   ├── monthly_export.py                # 按月份导出聊天 + 每月分析（skill data 外）
 │   ├── analyze.py                      # 表达 + 行为 + 趣味推断（3 模块合一）
 │   ├── render_card.py                  # 名片渲染 v9（HTML+CSS+Chrome headless，4:5 默认，flex 等分填满）
 │   ├── send_report.py                  # dws 发送层

@@ -65,6 +65,31 @@ cp -R work-selfie ~/.claude/skills/work-selfie
 
 Agent 会先告诉你它准备读取什么数据，等你确认后再开始。默认产物会先落到本地，不会自动发出去。
 
+## 聊天太多怕漏？
+
+很多人的真实工作不是 30 天几百条消息，而是一年几万条：群里救火、私聊对齐、会后补方案、深夜回“我看一下”。一次性把聊天记录塞给 agent，最容易被截断，最后分析出来就像只看了你工作的冰山一角。
+
+这时让 WorkSelfie 按月份跑：
+
+```bash
+python3 scripts/main.py --provider dws --monthly-export --days 365 --dry-run
+```
+
+这里的 `--dry-run` 只是不发送/不更新最终快照，月度导出文件仍会写到本地。
+
+它会尽可能按月份翻页导出聊天记录，并在本地生成：
+
+```text
+~/Downloads/work-selfie/monthly-chat/
+├── 2026-01/messages.jsonl
+├── 2026-01/monthly-analysis.md
+├── 2026-02/messages.jsonl
+├── 2026-02/monthly-analysis.md
+└── manifest.json
+```
+
+每个月的 `monthly-analysis.md` 会先拆出这个月的「重点工作、进展、用户行为特性」，再把所有月份合起来做最终 WorkSelfie。这样看到的不是某几段高光聊天，而是你一年里真实的工作轨迹。
+
 ## 公司用钉钉还是飞书？
 
 WorkSelfie 的底层不是绑死某一个办公软件，而是通过 CLI provider 读取你授权的工作痕迹：

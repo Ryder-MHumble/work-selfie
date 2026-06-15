@@ -39,6 +39,7 @@ from snapshot import (
 from collect_self import collect_all, get_self
 from analyze import analyze_all
 from render_card import render_card
+from monthly_export import default_output_dir, export_monthly_chats, summarize_export_result
 from send_report import (
     send_text_message, send_image_message, send_report_as_doc, share_doc_to_user,
     build_report_text, DWS_BIN,
@@ -161,6 +162,10 @@ def run(
     send: bool = False,
     force_full: bool = False,
     style: str = "4x5",
+    monthly_export: bool = False,
+    monthly_output_dir: Optional[str] = None,
+    monthly_max_pages: int = 300,
+    monthly_page_size: int = 100,
 ) -> Dict[str, Any]:
     """主流程入口
 
@@ -195,7 +200,28 @@ def run(
         start_iso = window["start"]
         end_iso = window["end"]
 
-    collection = collect_all(provider=provider, start_iso=start_iso, end_iso=end_iso)
+    monthly_export_result = None
+    if monthly_export:
+        monthly_export_dir = monthly_output_dir or str(default_output_dir())
+        print(f"  启用按月份聊天导出：{monthly_export_dir}", file=sys.stderr)
+        collection = collect_all(
+            provider=provider,
+            start_iso=start_iso,
+            end_iso=end_iso,
+            skip_chat=True,
+        )
+        monthly_export_result = export_monthly_chats(
+            start_iso,
+            end_iso,
+            output_dir=monthly_export_dir,
+            provider=provider,
+            page_size=monthly_page_size,
+            max_pages_per_month=monthly_max_pages,
+        )
+        collection.messages = monthly_export_result["messages"]
+        collection.errors.pop("chat", None)
+    else:
+        collection = collect_all(provider=provider, start_iso=start_iso, end_iso=end_iso)
     user_id = collection.user_id
     user_name = collection.user_name
 
@@ -230,6 +256,17 @@ def run(
             "end": collection.window_end,
         },
     })
+    if monthly_export_result:
+        truncated_months = [
+            m["month"] for m in monthly_export_result["months"]
+            if m.get("possibly_truncated")
+        ]
+        new_snapshot["data_sources"]["chat"]["monthly_export"] = {
+            "output_dir": monthly_export_result["output_dir"],
+            "month_count": len(monthly_export_result["months"]),
+            "manifest_path": monthly_export_result["manifest_path"],
+            "possibly_truncated_months": truncated_months,
+        }
     diff = diff_snapshots(old_snapshot, new_snapshot)
     new_snapshot["diff_from_previous"] = diff
     if not diff.get("is_first_run"):
@@ -308,6 +345,7 @@ def run(
             "status": "dry_run",
             "report_text_length": len(report_text),
             "png_path": png_path,
+            "monthly_export": summarize_export_result(monthly_export_result),
         }
 
     if send and not ask_confirm_send():
@@ -392,6 +430,7 @@ def run(
         "sent_card": sent_card,
         "elapsed_sec": round(elapsed, 1),
         "saved_files": saved_files,
+        "monthly_export": summarize_export_result(monthly_export_result),
     }
 
 
@@ -399,7 +438,7 @@ def run(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="self-distill 主流程")
-    parser.add_argument("--days", type=int, default=90, help="时间窗口天数（默认 90 = 接近全量；用 --all 真正遍历）")
+    parser.add_argument("--days", type=int, default=90, help="时间窗口天数（默认 90；全年可用 --days 365）")
     parser.add_argument("--provider", default="dws", choices=["dws", "lark", "auto"],
                         help="办公软件 CLI provider（当前 dws 实采，lark 入口预留）")
     parser.add_argument("--skip-consent", action="store_true", help="跳过知情同意（仅当用户已明确授权）")
@@ -411,7 +450,15 @@ if __name__ == "__main__":
     parser.add_argument("--bg-color", default="#1A2B5E", help="(已弃用) 名片背景色")
     parser.add_argument("--iris-color", default="#D62828", help="(已弃用) 名片眼睛颜色")
     parser.add_argument("--style", default="4x5", choices=["1x1", "4x5", "9x16"],
-                        help="名片比例 (默认 4x5 = 800x1000 小红书帖图)")
+                        help="名片比例 (默认 4x5 = 720x900 小红书帖图)")
+    parser.add_argument("--monthly-export", action="store_true",
+                        help="按月份拉取并保存聊天记录，同时生成每月 monthly-analysis.md")
+    parser.add_argument("--monthly-output-dir", default=None,
+                        help="月度聊天导出目录（默认 ~/Downloads/work-selfie/monthly-chat）")
+    parser.add_argument("--monthly-max-pages", type=int, default=300,
+                        help="每个月最多翻页数；触达上限会标记 possibly_truncated")
+    parser.add_argument("--monthly-page-size", type=int, default=100,
+                        help="每页聊天条数")
     args = parser.parse_args()
 
     result = run(
@@ -423,6 +470,10 @@ if __name__ == "__main__":
         send=args.send,
         force_full=args.force_full,
         style=args.style,
+        monthly_export=args.monthly_export,
+        monthly_output_dir=args.monthly_output_dir,
+        monthly_max_pages=args.monthly_max_pages,
+        monthly_page_size=args.monthly_page_size,
     )
     print("\nResult:", json.dumps(result, ensure_ascii=False, indent=2))
     sys.exit(0 if result.get("status") in ("success", "dry_run") else 1)
